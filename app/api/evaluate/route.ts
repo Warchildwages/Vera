@@ -24,31 +24,31 @@ export async function POST(req: Request) {
       )
     : await discoverAgents();
 
-  const profiles: AgentProfile[] = [];
+  const profiles: AgentProfile[] = await Promise.all(
+    agents.map(async (agent) => {
+      const verification = await verifyAgent(agent);
+      const evaluation = verification.keyValid
+        ? await evaluateAgent(agent, verification)
+        : null;
+      const reputation = aggregateReputation(agent.agentId);
+      const warnings = getWarnings(agent.agentId);
 
-  for (const agent of agents) {
-    const verification = await verifyAgent(agent);
-    const evaluation = verification.keyValid
-      ? await evaluateAgent(agent, verification)
-      : null;
-    const reputation = aggregateReputation(agent.agentId);
-    const warnings = getWarnings(agent.agentId);
-
-    profiles.push({
-      agentId: agent.agentId,
-      name: agent.name,
-      description: agent.description,
-      endpoint: agent.endpoint,
-      capabilities: agent.capabilities,
-      chains: agent.chains,
-      didNostrUrl: agent.didNostrUrl,
-      verification,
-      evaluation,
-      reputation,
-      warnings,
-      lastUpdated: new Date().toISOString(),
-    });
-  }
+      return {
+        agentId: agent.agentId,
+        name: agent.name,
+        description: agent.description,
+        endpoint: agent.endpoint,
+        capabilities: agent.capabilities,
+        chains: agent.chains,
+        didNostrUrl: agent.didNostrUrl,
+        verification,
+        evaluation,
+        reputation,
+        warnings,
+        lastUpdated: new Date().toISOString(),
+      };
+    }),
+  );
 
   // Rank by evaluation score
   const ranked = profiles.sort(
