@@ -4,17 +4,19 @@ import { verifyAgent } from '../../../lib/verification';
 import { evaluateAgent } from '../../../lib/evaluator';
 import { aggregateReputation, getWarnings } from '../../../lib/reputation';
 import { buildDidNostrDoc } from '../../../lib/did-nostr';
+import { EvaluateSchema } from '../../../lib/schemas';
 import type { AgentProfile } from '../../../lib/types';
 
 /**
  * POST /api/evaluate — Evaluate all known agents and return ranked results
  *
- * This is the main entry point for foreign agents.
+ * This is the main entry point for requesting agents.
  * "Vera, who should I trust for this task?"
  */
 export async function POST(req: Request) {
-  const body = await req.json().catch(() => ({}));
-  const capability = (body.capability as string) ?? undefined;
+  const raw = await req.json().catch(() => ({}));
+  const parsed = EvaluateSchema.safeParse(raw);
+  const capability = parsed.success ? parsed.data.capability : undefined;
 
   const agents = capability
     ? (await discoverAgents()).filter((a) =>

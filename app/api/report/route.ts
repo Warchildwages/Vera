@@ -1,26 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { submitReputation } from '../../../lib/reputation';
-import type { ReputationEvent } from '../../../lib/types';
+import { ReportSchema } from '../../../lib/schemas';
 
 /**
  * POST /api/report — Submit a reputation event
  *
  * Foreign agents, users, and other verifiers use this to report
  * transaction outcomes, disputes, and problems to Vera.
+ * All submissions are validated with Zod before processing.
  */
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as ReputationEvent;
+    const raw = await req.json();
+    const parsed = ReportSchema.safeParse(raw);
 
-    if (!body.agentId || !body.type || !body.outcome) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Missing required fields: agentId, type, outcome' },
+        { error: 'VALIDATION_ERROR', detail: parsed.error.flatten().fieldErrors },
         { status: 400 },
       );
     }
 
-    body.eventId = body.eventId || `evt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    body.timestamp = body.timestamp || new Date().toISOString();
+    const body = {
+      ...parsed.data,
+      eventId: parsed.data.eventId || `evt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      timestamp: parsed.data.timestamp || new Date().toISOString(),
+    };
 
     submitReputation(body);
 
