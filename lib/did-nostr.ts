@@ -10,14 +10,25 @@ import type { AgentRecord } from './types';
 export const VERA_NOSTR_PUBKEY =
   process.env.VERA_NOSTR_PUBKEY ?? 'vera-demo-ed25519-pubkey';
 
+/** Cross-references to known agents — set when deployed */
+const LUNA_DID_NOSTR = process.env.LUNA_DID_NOSTR || '';
+const SIGIL_DID_NOSTR = process.env.SIGIL_DID_NOSTR || '';
+const VERA_BASE_URL = process.env.VERA_BASE_URL || 'https://vera-agent.onrender.com';
+
 /**
  * Build Vera's own did:nostr document.
  * Other agents query this to find Vera and learn what Vera knows.
+ *
+ * Cross-references: Luna and Sigil (bi-directional mesh).
  */
 export function buildDidNostrDoc(knownAgents: AgentRecord[]): Record<string, unknown> {
+  const alsoKnownAs: string[] = ['https://vera.trust'];
+  if (LUNA_DID_NOSTR) alsoKnownAs.push(LUNA_DID_NOSTR);
+  if (SIGIL_DID_NOSTR) alsoKnownAs.push(SIGIL_DID_NOSTR);
+
   return {
     id: VERA_NOSTR_PUBKEY,
-    alsoKnownAs: ['https://vera.trust'],
+    alsoKnownAs,
     verificationMethod: [
       {
         id: `#${VERA_NOSTR_PUBKEY}`,
