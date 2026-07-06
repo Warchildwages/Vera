@@ -101,7 +101,7 @@ export function middleware(request: NextRequest) {
     const origin = getCorsOrigin(request);
     response.headers.set('Access-Control-Allow-Origin', origin);
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Payment-Id');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Payment-Id, PAYMENT-SIGNATURE, X-Idempotency-Key, X-User-Wallet');
     return response;
   }
 
@@ -132,7 +132,7 @@ export function middleware(request: NextRequest) {
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
   response.headers.set(
     'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, X-Payment-Id, X-Idempotency-Key',
+    'Content-Type, Authorization, X-Payment-Id, PAYMENT-SIGNATURE, X-Idempotency-Key, X-User-Wallet',
   );
   response.headers.set('Access-Control-Allow-Credentials', 'true');
   return response;

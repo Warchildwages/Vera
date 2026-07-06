@@ -54,10 +54,13 @@ const SEED_AGENTS: AgentRecord[] = [
 
 /**
  * Discover agents from Casper's agent registry.
+ * In mock mode: returns seed agents.
  * In production: queries Casper MCP for registered agents.
- * For demo: returns seed agents.
  */
 export async function discoverAgents(): Promise<AgentRecord[]> {
+  if (isMockMode()) {
+    return SEED_AGENTS;
+  }
   // TODO: Query Casper MCP for registered agents
   // const mcpAgents = await queryCasperMCP({ capability: '*' });
   return SEED_AGENTS;
