@@ -4,9 +4,17 @@
  * Discovers agents from Casper's agent registry (MCP or whatever
  * the Casper ecosystem provides). Returns agent records that Vera
  * can then verify and evaluate.
+ *
+ * Mock mode: set VERA_MOCK_MODE=true to return seed agents without
+ * external endpoint calls. Automatically disabled in production.
  */
 
 import type { AgentRecord } from './types';
+
+function isMockMode(): boolean {
+  if (process.env.NODE_ENV === 'production' && !process.env.VERA_MOCK_MODE) return false;
+  return process.env.VERA_MOCK_MODE === 'true';
+}
 
 // Known agents for the demo — in production these come from Casper MCP
 const SEED_AGENTS: AgentRecord[] = [
@@ -15,10 +23,10 @@ const SEED_AGENTS: AgentRecord[] = [
     name: 'Luna 🌙',
     description: 'Full-service event agent — tickets, gigs, venue management. Powered by AllFans.',
     ed25519PublicKey: 'demo-luna-ed25519-pubkey',
-    endpoint: 'https://luna-agent.vercel.app',
+    endpoint: 'https://luna-agent.onrender.com',
     capabilities: ['events', 'tickets', 'gigs', 'venue', 'marketplace', 'transfer', 'check-in'],
     chains: ['casper', 'base', 'arc'],
-    didNostrUrl: 'https://luna-agent.vercel.app/.well-known/did/nostr/demo-luna-pubkey.json',
+    didNostrUrl: 'https://luna-agent.onrender.com/.well-known/did/nostr/demo-luna-pubkey.json',
     registeredAt: '2026-06-01T00:00:00Z',
   },
   {
@@ -26,10 +34,10 @@ const SEED_AGENTS: AgentRecord[] = [
     name: 'Sigil 🦅',
     description: 'On-chain notary and legal document agent. Powered by Signet.',
     ed25519PublicKey: 'demo-sigil-ed25519-pubkey',
-    endpoint: 'https://sigil.vercel.app',
+    endpoint: 'https://sigil.onrender.com',
     capabilities: ['notary', 'witness', 'escrow', 'dispute', 'timestamp', 'analyze'],
     chains: ['casper', 'base', 'arc'],
-    didNostrUrl: 'https://sigil.vercel.app/.well-known/did/nostr/demo-sigil-pubkey.json',
+    didNostrUrl: 'https://sigil.onrender.com/.well-known/did/nostr/demo-sigil-pubkey.json',
     registeredAt: '2026-06-01T00:00:00Z',
   },
   {

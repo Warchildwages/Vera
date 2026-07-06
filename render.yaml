@@ -1,0 +1,30 @@
+# Vera — Render Blueprint
+# Render auto-detects this file and pre-configures the service.
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: vera-agent
+    runtime: node
+    repo: https://github.com/Warchildwages/Vera
+    branch: main
+    buildCommand: npm install -g pnpm && pnpm install && pnpm build
+    startCommand: node .next/standalone/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: VERA_MOCK_MODE
+        value: "true"
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: VERA_PRIVATE_KEY
+        sync: false
+      - key: VERA_PUBLIC_KEY
+        sync: false
+      - key: CASPER_RPC_URL
+        sync: false
+      - key: MCP_REGISTRY_URL
+        sync: false
+    healthCheckPath: /api/health

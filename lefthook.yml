@@ -1,0 +1,16 @@
+# Vera — Lefthook Pre-Commit Configuration
+pre-commit:
+  parallel: true
+  commands:
+    gitleaks:
+      run: npx gitleaks detect --source . --no-git --config-path .gitleaks.toml --exit-code 1
+      skip:
+        - merge
+        - rebase
+      stage_fixed: false
+
+    typecheck:
+      run: npx tsc --noEmit
+      skip:
+        - merge
+        - rebase

@@ -1,0 +1,18 @@
+# Vera — Gitleaks Configuration
+# https://github.com/gitleaks/gitleaks
+
+[allowlist]
+description = "Global allowlist"
+paths = [
+  "(node_modules/)",
+  "(.next/)",
+  "(pnpm-lock.yaml)",
+]
+
+[[rules]]
+description = "Vera-specific: seed data and demo keys"
+regex = '''demo-.*-key|demo-.*-pubkey|seed-.*-address'''
+allowlist = [
+  "lib/discovery.ts",
+  "lib/reputation.ts",
+]
