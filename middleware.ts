@@ -132,7 +132,7 @@ export function middleware(request: NextRequest) {
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
   response.headers.set(
     'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, X-Payment-Id, PAYMENT-SIGNATURE, X-Idempotency-Key, X-User-Wallet',
+    'Content-Type, Authorization, X-Payment-Id, PAYMENT-SIGNATURE, X-Idempotency-Key, X-User-Wallet, x-402-amount, x-402-payment-intent, x-402-token, x-402-recipient, x-402-idempotency-key, x-402-expires-at',
   );
   response.headers.set('Access-Control-Allow-Credentials', 'true');
   return response;
