@@ -229,6 +229,7 @@ export async function getAttestation(
 
   try {
     const cs = await loadCasperSdk();
+    if (!cs) return null;
     const { CasperClient, Contracts } = cs;
 
     const casperClient = new CasperClient(CASPER_RPC_URL);

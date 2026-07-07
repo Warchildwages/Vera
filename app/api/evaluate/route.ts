@@ -67,7 +67,7 @@ export async function POST(req: Request) {
         agent,
         score: topAgent.evaluation?.overall ?? 0,
         capabilities: topAgent.capabilities,
-        challengeResponse: topAgent.verification?.challenge || undefined,
+        challengeResponse: topAgent.verification?.keyDetail || 'challenge-not-performed',
       });
       casperAttestation = await writeAttestation(attestationRecord);
     }

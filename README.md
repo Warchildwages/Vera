@@ -67,28 +67,53 @@ VERA_MOCK_MODE=true pnpm test
 ## Demo
 
 ```bash
-# Discover agents
+# 0. Start Vera (mock mode — all features work, no Testnet needed)
+VERA_MOCK_MODE=true pnpm dev
+
+# 1. Discover agents
 curl http://localhost:3006/api/discover
 
-# Evaluate all agents — produces an on-chain attestation!
+# 2. Check the leaderboard (NEW)
+curl http://localhost:3006/api/leaderboard
+
+# 3. Evaluate all agents — produces on-chain attestation!
 curl -X POST http://localhost:3006/api/evaluate \
   -H "Content-Type: application/json" \
   -d '{}'
 
-# Get agent details
+# 4. Get agent details
 curl http://localhost:3006/api/agents/luna
+
+# 5. Compare agents side-by-side (NEW)
+curl "http://localhost:3006/api/agents/compare?ids=luna,sigil"
+
+# 6. Register a new agent (NEW)
+curl -X POST http://localhost:3006/api/register \
+  -H "Content-Type: application/json" \
+  -d '{"agentId":"my-agent","name":"My Agent","ed25519PublicKey":"abcd1234...64hex...","endpoint":"https://my-agent.example.com","capabilities":["data"],"chains":["casper"]}'
+
+# 7. Query on-chain attestations (NEW)
+curl http://localhost:3006/api/attestations
 ```
 
 ## API
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/discover` | GET | List all discovered agents |
-| `/api/agents/:id` | GET | Full profile for a specific agent |
-| `/api/evaluate` | POST | Full evaluation — **produces Casper attestation** |
-| `/api/report` | POST | Submit a reputation event |
 | `/api/health` | GET | Service health |
+| `/api/discover` | GET | List all discovered agents (`?capability=events`) |
+| `/api/leaderboard` | GET | **NEW** — Ranked agent scores |
+| `/api/agents/:id` | GET | Full profile for a specific agent |
+| `/api/agents/compare` | GET | **NEW** — Compare agents `?ids=luna,sigil` |
+| `/api/evaluate` | POST | Full evaluation — **produces Casper attestation** |
+| `/api/attestations` | GET | **NEW** — On-chain attestation history |
+| `/api/attestations` | POST | **NEW** — Attest a specific agent |
+| `/api/register` | POST | **NEW** — Self-register a new agent |
+| `/api/report` | POST | Submit a reputation event |
+| `/api/verify/challenge` | GET | Get Ed25519 challenge for key proof |
+| `/api/verify/challenge` | POST | Submit signed challenge response |
 | `/api/x402/service-info` | GET | x402 discovery with DID document |
+| `/.well-known/did/nostr/:pubkey` | GET | Vera's W3C did:nostr document |
 
 ## Environment Variables
 
