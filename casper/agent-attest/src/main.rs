@@ -46,7 +46,7 @@ pub struct AgentAttest {
 impl AgentAttest {
     /// Record a new attestation.
     /// Emits an `AttestationRecorded` event.
-    #[odra( payable)]
+    #[odra(payable)]
     pub fn record(
         &mut self,
         agent_id: String,

@@ -17,24 +17,27 @@ const VERA_BASE_URL = process.env.VERA_BASE_URL || 'https://vera-agent.onrender.
 
 /**
  * Build Vera's own did:nostr document.
+ * Per W3C Nostr CG v0.1.0 (https://nostr.com/did)
  * Other agents query this to find Vera and learn what Vera knows.
  *
  * Cross-references: Luna and Sigil (bi-directional mesh).
  */
 export function buildDidNostrDoc(knownAgents: AgentRecord[]): Record<string, unknown> {
-  const alsoKnownAs: string[] = ['https://vera.trust'];
+  const didId = `did:nostr:${VERA_NOSTR_PUBKEY}`;
+  const alsoKnownAs: string[] = [];
   if (LUNA_DID_NOSTR) alsoKnownAs.push(LUNA_DID_NOSTR);
   if (SIGIL_DID_NOSTR) alsoKnownAs.push(SIGIL_DID_NOSTR);
 
   return {
-    id: VERA_NOSTR_PUBKEY,
+    '@context': ['https://www.w3.org/ns/did/v1'],
+    id: didId,
     alsoKnownAs,
     verificationMethod: [
       {
-        id: `#${VERA_NOSTR_PUBKEY}`,
+        id: `${didId}#${VERA_NOSTR_PUBKEY}`,
         type: 'Ed25519VerificationKey2018',
-        controller: VERA_NOSTR_PUBKEY,
-        publicKeyMultibase: VERA_NOSTR_PUBKEY,
+        controller: didId,
+        publicKeyMultibase: `z${VERA_NOSTR_PUBKEY}`,
       },
     ],
     service: [
