@@ -69,6 +69,20 @@ export async function verifyAgent(agent: AgentRecord): Promise<VerificationResul
     ? 'Ed25519 key is 32 bytes (valid format). Challenge-response needed for full proof.'
     : 'Ed25519 key invalid: must be 32 bytes hex-encoded (64 hex chars)';
 
+  // In mock mode, skip external network calls
+  const isMock = process.env.VERA_MOCK_MODE === 'true' || process.env.NODE_ENV !== 'production';
+  if (isMock) {
+    result.endpointReachable = result.keyValid;
+    result.endpointDetail = result.endpointReachable
+      ? 'Mock mode: endpoint assumed reachable (key valid)'
+      : 'Mock mode: endpoint unreachable (key invalid)';
+    result.didNostrValid = result.keyValid;
+    result.didNostrDetail = result.didNostrValid
+      ? 'Mock mode: DID assumed valid (key valid)'
+      : 'Mock mode: DID invalid (key invalid)';
+    return result;
+  }
+
   // 2. Test endpoint reachability
   try {
     const resp = await fetch(agent.endpoint, {

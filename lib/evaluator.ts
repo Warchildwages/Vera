@@ -6,6 +6,7 @@
  */
 
 import type { AgentRecord, EvaluationScore, VerificationResult } from './types';
+import { aggregateReputation } from './reputation';
 
 /** Test result for a single operation */
 interface OpTest {
@@ -22,6 +23,37 @@ export async function evaluateAgent(
   agent: AgentRecord,
   verification: VerificationResult,
 ): Promise<EvaluationScore> {
+  // In mock mode, return instant results without hitting real endpoints
+  if (process.env.VERA_MOCK_MODE === 'true') {
+    const testTime = new Date().toISOString();
+    const identityScore = calculateIdentityScore(verification);
+    const capabilityScore = agent.capabilities.length > 0 ? 85 : 0;
+    const reliabilityScore = verification.endpointReachable ? 80 : 30;
+
+    const dimensions = [
+      { name: 'identity', score: identityScore, detail: descriptionForIdentity(identityScore) },
+      { name: 'capability', score: capabilityScore, detail: descriptionForCapability(capabilityScore) },
+      { name: 'reliability', score: reliabilityScore, detail: descriptionForReliability(reliabilityScore) },
+    ];
+
+    const overall = Math.round(identityScore * 0.3 + capabilityScore * 0.4 + reliabilityScore * 0.3);
+
+    // Apply reputation bonus
+    const rep = aggregateReputation(agent.agentId);
+    const repBonus = Math.min(10, Math.floor(rep.totalTransactions / 10));
+
+    return {
+      agentId: agent.agentId,
+      overall: Math.min(100, overall + repBonus),
+      identity: identityScore,
+      capability: capabilityScore,
+      reliability: reliabilityScore,
+      dimensions,
+      testedAt: testTime,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+  }
+
   const tests: OpTest[] = [];
   const testTime = new Date().toISOString();
 
