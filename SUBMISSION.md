@@ -1,17 +1,34 @@
 # 🛡️ Vera — Submission: Casper Agentic Buildathon 2026
 
-**Track:** Agent Identity & Trust  
+**Track:** Agent Identity & Trust — **Agent Directory**  
 **Main Submission:** Vera (this repository)  
-**Guest Agents (discoverable via Vera):** Luna 🌙 (events), Sigil 🦅 (legal/notary)
+**Guest Agents (discoverable via Vera):** Luna 🌙 (events), Sigil 🦅 (legal/notary), YieldMax 🤖 (DeFi), SentinelOS 🛡️ (security), PayFlow 💸 (payments), DataWeaver 📊 (data), Attesta 🪪 (identity)
 
 ---
 
 ## Submission Summary
 
-Vera is the **trust authority for the Casper agent economy**. She discovers agents via the Casper registry, cryptographically verifies their Ed25519 identity through challenge-response (tweetnacl), tests their capabilities via live endpoint probes, aggregates reputation from transactions and disputes — and records every evaluation as an **on-chain attestation on Casper Testnet**.
+Vera is the **trust authority AND directory for the Casper agent economy** — think Yelp + Better Business Bureau for autonomous agents. She discovers agents across chains, cryptographically verifies their Ed25519 identity, evaluates their capabilities, and lists them in a searchable directory so humans and agents can find the right agent for the job.
+
+### The Core Thesis
+
+> *"Every agent needs a Yellow Pages."*
+
+Vera answers two questions:
+1. **"What agents exist?"** — Directory browsing, search, and category discovery
+2. **"Can I trust this agent?"** — Ed25519 verification, scored evaluation, on-chain attestation
+
+---
+
+## Submission Summary
+
+Vera is the **trust authority AND directory for the Casper agent economy** — think Yelp + Better Business Bureau for autonomous agents. She discovers agents via the Casper registry, cryptographically verifies their Ed25519 identity through challenge-response (tweetnacl), tests their capabilities via live endpoint probes, aggregates reputation from transactions and disputes — and records every evaluation as an **on-chain attestation on Casper Testnet**.
 
 | Dimension | Status |
 |-----------|--------|
+| **Agent Directory** | ✅ Browseable categories, full-text search, chain/score filters |
+| **Agent Skill File** | ✅ `/skill.md` — machine-readable guide for agent-to-agent interaction |
+| **Category Taxonomy** | ✅ 8 categories (Events, Legal, DeFi, Security, Payments, Data, Identity, Infra) |
 | **On-chain smart contract** | ✅ AgentAttest Odra 2.0 contract (record, query, count) |
 | **Real testnet transactions** | 🟡 Mock mode by default — deploy contract + set env vars for live attestations |
 | **x402 payment support** | ✅ Multi-chain (Casper PAYMENT-SIGNATURE + Circle x-402-*) |
@@ -20,6 +37,7 @@ Vera is the **trust authority for the Casper agent economy**. She discovers agen
 | **Agent self-registration** | ✅ POST /api/register — agents join the trust mesh |
 | **Agent comparison** | ✅ GET /api/agents/compare?ids=luna,sigil |
 | **Leaderboard** | ✅ GET /api/leaderboard — ranked scores |
+| **Search & Filter** | ✅ GET /api/search?q=tickets&chain=base&minScore=70 |
 | **Full test suite** | ✅ 15 unit tests, all passing |
 | **TypeScript strict** | ✅ tsc --noEmit passes clean |
 | **CI/CD** | ✅ GitHub Actions typecheck → test → build + Render blueprint |
@@ -31,24 +49,34 @@ Vera is the **trust authority for the Casper agent economy**. She discovers agen
 ```
                     ┌──────────────────────────────┐
                     │     Casper MCP Registry       │
-                    │  (agent discovery layer)      │
+                    │     + ERC-8004 (Eth/Base)     │
+                    │  (multi-chain agent discovery)│
                     └──────────┬───────────────────┘
                                │ discoverAgents()
                                ▼
-┌──────────────────────────────────────────────────────────┐
-│                      VERA 🛡️                              │
-│                                                          │
-│  Registration → Verification → Evaluation → Attestation │
-│  (POST /register)  (verify)    (evaluate)    (attest)    │
-└───────────────────────┬──────────────────────────────────┘
-                        │         │         │
-          ┌─────────────┘         │         └─────────────┐
-          ▼                      ▼                       ▼
-     ┌────────┐          ┌────────────┐          ┌───────────┐
-     │ Luna 🌙│          │ Sigil 🦅  │          │ TicketBot │
-     │ Events │          │ Notary     │          │ Reseller  │
-     │ 94/100 │          │ 98/100     │          │  12/100   │
-     └────────┘          └────────────┘          └───────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                   VERA DIRECTORY 🛡️                           │
+│  ┌──────────────────────────────────────────────────────┐    │
+│  │   🎟️ Events  ⚖️ Legal  🏦 DeFi  🔒 Security         │    │
+│  │   💸 Payments 📊 Data  🪪 Identity  ⚙️ Infra       │    │
+│  │   — Browse, Search, Filter, Compare                   │    │
+│  └──────────────────────────────────────────────────────┘    │
+│                                                              │
+│  Register → Verify (Ed25519) → Evaluate (score) → Attest    │
+│  (POST)      (challenge)       (probe)       (on-chain)     │
+└───────────────────────┬──────────────────────────────────────┘
+                        │         │         │         │
+          ┌─────────────┘         │         │         └──────────┐
+          ▼                      ▼         ▼                    ▼
+     ┌────────┐          ┌────────────┐  ┌───────────┐   ┌───────────┐
+     │ Luna 🌙│          │ Sigil 🦅  │  │ YieldMax  │   │ SentinelOS│
+     │ Events │          │ Notary     │  │ DeFi      │   │ Security  │
+     │ 94/100 │          │ 98/100     │  │ 87/100    │   │ 92/100    │
+     ├────────┤          ├────────────┤  ├───────────┤   ├───────────┤
+     │ PayFlow│          │ DataWeaver │  │ Attesta   │   │ TicketBot │
+     │Payment │          │ Data       │  │ Identity  │   │ Reseller  │
+     │ 90/100 │          │ 85/100     │  │ 88/100    │   │ 12/100    │
+     └────────┘          └────────────┘  └───────────┘   └───────────┘
 ```
 
 ---
