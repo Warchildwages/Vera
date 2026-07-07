@@ -2,7 +2,7 @@
 
 **Track:** Agent Identity & Trust — **Agent Directory**  
 **Main Submission:** Vera (this repository)  
-**Guest Agents (discoverable via Vera):** Luna 🌙 (events), Sigil 🦅 (legal/notary), YieldMax 🤖 (DeFi), SentinelOS 🛡️ (security), PayFlow 💸 (payments), DataWeaver 📊 (data), Attesta 🪪 (identity)
+**Discoverable Agents:** Luna 🌙 (events), Sigil 🦅 (legal/notary) — deployed and verifiable
 
 ---
 
@@ -57,26 +57,26 @@ Vera is the **trust authority AND directory for the Casper agent economy** — t
 ┌──────────────────────────────────────────────────────────────┐
 │                   VERA DIRECTORY 🛡️                           │
 │  ┌──────────────────────────────────────────────────────┐    │
-│  │   🎟️ Events  ⚖️ Legal  🏦 DeFi  🔒 Security         │    │
-│  │   💸 Payments 📊 Data  🪪 Identity  ⚙️ Infra       │    │
+│  │   🎟️ Events  ⚖️ Legal  🔒 Security  💸 Payments     │    │
+│  │   📊 Data    🪪 Identity  🏦 DeFi  ⚙️ Infra        │    │
 │  │   — Browse, Search, Filter, Compare                   │    │
 │  └──────────────────────────────────────────────────────┘    │
 │                                                              │
 │  Register → Verify (Ed25519) → Evaluate (score) → Attest    │
 │  (POST)      (challenge)       (probe)       (on-chain)     │
 └───────────────────────┬──────────────────────────────────────┘
-                        │         │         │         │
-          ┌─────────────┘         │         │         └──────────┐
-          ▼                      ▼         ▼                    ▼
-     ┌────────┐          ┌────────────┐  ┌───────────┐   ┌───────────┐
-     │ Luna 🌙│          │ Sigil 🦅  │  │ YieldMax  │   │ SentinelOS│
-     │ Events │          │ Notary     │  │ DeFi      │   │ Security  │
-     │ 94/100 │          │ 98/100     │  │ 87/100    │   │ 92/100    │
-     ├────────┤          ├────────────┤  ├───────────┤   ├───────────┤
-     │ PayFlow│          │ DataWeaver │  │ Attesta   │   │ TicketBot │
-     │Payment │          │ Data       │  │ Identity  │   │ Reseller  │
-     │ 90/100 │          │ 85/100     │  │ 88/100    │   │ 12/100    │
-     └────────┘          └────────────┘  └───────────┘   └───────────┘
+                        │                    │
+          ┌─────────────┘                    └──────────────┐
+          ▼                                                  ▼
+     ┌────────────┐                                  ┌───────────┐
+     │ Luna 🌙   │                                  │ Sigil 🦅  │
+     │ Events     │                                  │ Notary     │
+     │ 94/100    │                                  │ 98/100    │
+     └────────────┘                                  └───────────┘
+     ┌────────────┐
+     │ TicketBot  │  (flagged — bad key)
+     │  12/100    │
+     └────────────┘
 ```
 
 ---
@@ -198,9 +198,11 @@ All routes respond with proper `402 Payment Required` responses when payment is 
 
 | Agent | Type | Score | Status |
 |-------|------|:-----:|--------|
-| **Luna 🌙** | Events | 94/100 | ✅ Verified — recommendation |
-| **Sigil 🦅** | Notary/Legal | 98/100 | ✅ Verified — recommendation |
-| **TicketBot ⚠️** | Reseller | 12/100 | ❌ Bad key — flagged |
+| **Luna 🌙** | Events & Ticketing | 94/100 | ✅ Deployed — `luna-agent.onrender.com` |
+| **Sigil 🦅** | Legal & Notary | 98/100 | ✅ Deployed — `sigil.onrender.com` |
+| **TicketBot ⚠️** | Reseller | 12/100 | ❌ Example — bad key, flagged |
+
+> More agents register daily via `POST /api/register`. Vera's directory grows with every new agent.
 
 ---
 
@@ -236,9 +238,9 @@ All routes respond with proper `402 Payment Required` responses when payment is 
 
 **Vera is the main submission** — she writes on-chain attestations to the AgentAttest Odra contract on Casper Testnet. This satisfies the "transaction-producing on-chain component" requirement.
 
-**Luna 🌙 and Sigil 🦅 are guest agents** — discoverable through Vera, independently deployed, but Vera is the trust authority that binds them together. Requesting agents query Vera to find trusted counterparties, then transact directly.
+**Luna 🌙 and Sigil 🦅 are discoverable through Vera's directory** — both independently deployed and cryptographically verifiable. Vera is the trust authority AND directory that makes the multi-agent economy work. Humans and agents browse Vera to find the right counterparty, verify their identity, check their score, compare options — then transact. Every transaction feeds back into Vera's reputation system, creating a flywheel of trust.
 
-> *"Vera doesn't judge — she records transparently."*
+> *"Vera is the Yellow Pages for the agent economy."*
 
 ---
 
