@@ -57,21 +57,42 @@ export async function POST(req: Request) {
     (a, b) => (b.evaluation?.overall ?? 0) - (a.evaluation?.overall ?? 0),
   );
 
-  // Write on-chain attestation for top-ranked agent
-  const topAgent = ranked[0];
-  let casperAttestation = null;
-  if (topAgent) {
-    const agent = agents.find((a) => a.agentId === topAgent.agentId);
-    if (agent) {
+  // Write on-chain attestation for EVERY agent — success AND failure
+  const attestations = await Promise.all(
+    ranked.map(async (profile) => {
+      const agent = agents.find((a) => a.agentId === profile.agentId);
+      if (!agent) return null;
+      const passed = profile.verification.keyValid && profile.evaluation !== null;
+      const failureReason = !profile.verification.keyValid
+        ? 'Ed25519 key verification failed'
+        : profile.evaluation === null
+          ? 'Evaluation skipped — insufficient verification'
+          : undefined;
       const attestationRecord = buildAttestationRecord({
         agent,
-        score: topAgent.evaluation?.overall ?? 0,
-        capabilities: topAgent.capabilities,
-        challengeResponse: topAgent.verification?.keyDetail || 'challenge-not-performed',
+        score: profile.evaluation?.overall ?? 0,
+        capabilities: profile.capabilities,
+        challengeResponse: passed
+          ? profile.verification.keyDetail || 'verified'
+          : `FAILED: ${failureReason}`,
       });
-      casperAttestation = await writeAttestation(attestationRecord);
-    }
-  }
+      const result = await writeAttestation(attestationRecord);
+      return {
+        agentId: profile.agentId,
+        name: profile.name,
+        score: profile.evaluation?.overall ?? 0,
+        passed,
+        failureReason,
+        transactionHash: result?.transactionHash || null,
+        explorer: result?.transactionHash
+          ? `https://testnet.cspr.live/deploy/${result.transactionHash}`
+          : null,
+      };
+    }),
+  );
+
+  const verifiedCount = attestations.filter((a) => a && a.passed).length;
+  const failedCount = attestations.filter((a) => a && !a.passed).length;
 
   const didDoc = buildDidNostrDoc(agents);
 
@@ -86,17 +107,12 @@ export async function POST(req: Request) {
     })),
     agents: ranked,
     didDoc,
-    casperAttestation: casperAttestation
-      ? {
-          chain: 'casper:casper-test',
-          contract: 'AgentAttest',
-          transactionHash: casperAttestation.transactionHash,
-          verified: casperAttestation.success,
-          explorer: casperAttestation.transactionHash
-            ? `https://testnet.cspr.live/deploy/${casperAttestation.transactionHash}`
-            : null,
-        }
-      : null,
+    attestations: attestations.filter(Boolean),
+    summary: {
+      total: ranked.length,
+      verified: verifiedCount,
+      failed: failedCount,
+    },
   });
 }
 
