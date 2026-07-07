@@ -5,13 +5,15 @@ import { evaluateAgent } from '../../../lib/evaluator';
 import { aggregateReputation, getWarnings } from '../../../lib/reputation';
 import { buildDidNostrDoc } from '../../../lib/did-nostr';
 import { EvaluateSchema } from '../../../lib/schemas';
+import { buildAttestationRecord, writeAttestation } from '../../../lib/casper-attest';
 import type { AgentProfile } from '../../../lib/types';
 
 /**
  * POST /api/evaluate — Evaluate all known agents and return ranked results
  *
- * This is the main entry point for requesting agents.
- * "Vera, who should I trust for this task?"
+ * After evaluation, writes an on-chain attestation to Casper Testnet
+ * via the AgentAttest Odra contract. The deploy hash is returned
+ * in the response and can be verified on https://testnet.cspr.live
  */
 export async function POST(req: Request) {
   const raw = await req.json().catch(() => ({}));
@@ -55,6 +57,22 @@ export async function POST(req: Request) {
     (a, b) => (b.evaluation?.overall ?? 0) - (a.evaluation?.overall ?? 0),
   );
 
+  // Write on-chain attestation for top-ranked agent
+  const topAgent = ranked[0];
+  let casperAttestation = null;
+  if (topAgent) {
+    const agent = agents.find((a) => a.agentId === topAgent.agentId);
+    if (agent) {
+      const attestationRecord = buildAttestationRecord({
+        agent,
+        score: topAgent.evaluation?.overall ?? 0,
+        capabilities: topAgent.capabilities,
+        challengeResponse: topAgent.verification?.challenge || undefined,
+      });
+      casperAttestation = await writeAttestation(attestationRecord);
+    }
+  }
+
   const didDoc = buildDidNostrDoc(agents);
 
   return NextResponse.json({
@@ -68,6 +86,17 @@ export async function POST(req: Request) {
     })),
     agents: ranked,
     didDoc,
+    casperAttestation: casperAttestation
+      ? {
+          chain: 'casper:casper-test',
+          contract: 'AgentAttest',
+          transactionHash: casperAttestation.transactionHash,
+          verified: casperAttestation.success,
+          explorer: casperAttestation.transactionHash
+            ? `https://testnet.cspr.live/deploy/${casperAttestation.transactionHash}`
+            : null,
+        }
+      : null,
   });
 }
 

@@ -19,12 +19,14 @@ services:
         value: "true"
       - key: NEXT_PUBLIC_APP_URL
         sync: false
-      - key: VERA_PRIVATE_KEY
+      - key: VERA_ATTEST_PUBLIC_KEY
         sync: false
-      - key: VERA_PUBLIC_KEY
+      - key: VERA_ATTEST_SECRET_KEY
+        sync: false
+      - key: VERA_AGENT_ATTEST_CONTRACT
         sync: false
       - key: CASPER_RPC_URL
-        sync: false
+        value: "https://rpc.testnet.casper.network"
       - key: MCP_REGISTRY_URL
         sync: false
     healthCheckPath: /api/health
