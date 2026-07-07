@@ -119,8 +119,8 @@ async function loadCasperSdk(): Promise<Record<string, any> | null> {
     return (mod.default && Object.keys(mod.default).length > 3)
       ? mod.default
       : mod;
-  } catch {
-    console.warn('[casper-attest] casper-js-sdk not available — attestation will use mock');
+  } catch (e: unknown) {
+    console.warn('[casper-attest] casper-js-sdk not available — attestation will use mock', e instanceof Error ? e.message : String(e));
     return null;
   }
 }

@@ -49,12 +49,21 @@ export async function POST(req: Request) {
 
     const { agentId, challenge, signature, publicKey } = parsed.data;
 
-    // Look up the agent's registered public key
+    // Look up the agent's registered public key — NEVER fall back to user-supplied key
     const agent = await getAgent(agentId);
-    const expectedKey = agent?.ed25519PublicKey ?? publicKey;
+    if (!agent) {
+      return NextResponse.json(
+        {
+          verified: false,
+          agentId,
+          keyDetail: 'Agent not found in Vera registry. Register first via POST /api/register.',
+        },
+        { status: 404 },
+      );
+    }
 
-    // Verify the signature cryptographically
-    const valid = verifyChallenge(challenge, signature, expectedKey);
+    // Verify the signature cryptographically against the REGISTERED key
+    const valid = verifyChallenge(challenge, signature, agent.ed25519PublicKey);
 
     // If the agent exists, update their verification status
     if (valid && agent) {
@@ -86,8 +95,9 @@ export async function POST(req: Request) {
       keyDetail: 'Ed25519 key verified (key-only — no matching agent record).',
     });
   } catch (e) {
+    console.error('[verify-challenge] Verification error:', e);
     return NextResponse.json(
-      { error: 'VERIFICATION_FAILED', detail: (e as Error).message },
+      { error: 'VERIFICATION_FAILED', detail: 'An internal error occurred during verification.' },
       { status: 400 },
     );
   }

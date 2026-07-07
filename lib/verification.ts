@@ -10,31 +10,66 @@ import nacl from 'tweetnacl';
 import type { AgentRecord, VerificationResult } from './types';
 
 /**
+ * In-memory challenge store with TTL and one-time-use enforcement.
+ * Maps challenge hex → { issuedAt, consumed }
+ */
+const challengeStore = new Map<string, { issuedAt: number; consumed: boolean }>();
+const CHALLENGE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+/** Clean up expired challenges every ~100 calls */
+let cleanupCounter = 0;
+function cleanupExpiredChallenges(): void {
+  cleanupCounter++;
+  if (cleanupCounter % 100 !== 0) return;
+  const now = Date.now();
+  for (const [challenge, data] of challengeStore) {
+    if (now - data.issuedAt > CHALLENGE_TTL_MS) {
+      challengeStore.delete(challenge);
+    }
+  }
+}
+
+/**
  * Generate a random challenge for Ed25519 proof-of-control.
+ * Stores challenge server-side for replay protection.
  * The agent must sign this challenge with their private key to
  * cryptographically prove they control the claimed public key.
  */
 export function generateChallenge(): { challenge: string; bytes: Uint8Array } {
+  cleanupExpiredChallenges();
   const bytes = nacl.randomBytes(32);
   const challenge = Array.from(bytes)
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
+
+  challengeStore.set(challenge, { issuedAt: Date.now(), consumed: false });
+
   return { challenge, bytes };
 }
 
 /**
  * Verify a signed challenge against an Ed25519 public key.
+ * Enforces one-time-use — a challenge can only be redeemed once.
  *
  * @param challenge - The original challenge string (hex-encoded)
  * @param signature - The agent's signature (hex-encoded)
  * @param publicKeyHex - The agent's Ed25519 public key (hex-encoded)
- * @returns true if the signature is valid for the challenge and key
+ * @returns true if the signature is valid and the challenge hasn't been used
  */
 export function verifyChallenge(
   challenge: string,
   signature: string,
   publicKeyHex: string,
 ): boolean {
+  // Check challenge exists and hasn't expired
+  const stored = challengeStore.get(challenge);
+  if (!stored) return false;
+  if (stored.consumed) return false;
+  if (Date.now() - stored.issuedAt > CHALLENGE_TTL_MS) {
+    challengeStore.delete(challenge);
+    return false;
+  }
+
   try {
     const msgBytes = new TextEncoder().encode(challenge);
     const sigBytes = decodeHex(signature);
@@ -43,7 +78,14 @@ export function verifyChallenge(
     if (!pubBytes || pubBytes.length !== 32) return false;
     if (!sigBytes || sigBytes.length !== 64) return false;
 
-    return nacl.sign.detached.verify(msgBytes, sigBytes, pubBytes);
+    const valid = nacl.sign.detached.verify(msgBytes, sigBytes, pubBytes);
+
+    if (valid) {
+      // Mark consumed — one-time use
+      stored.consumed = true;
+    }
+
+    return valid;
   } catch {
     return false;
   }

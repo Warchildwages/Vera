@@ -20,7 +20,7 @@ export const EvaluateSchema = z.object({
 /** Schema for POST /api/verify/challenge — Challenge-response verification */
 export const ChallengeResponseSchema = z.object({
   agentId: z.string().min(1),
-  challenge: z.string().min(1, 'challenge is required'),
-  signature: z.string().min(1, 'signature is required'),
-  publicKey: z.string().min(1, 'publicKey is required'),
+  challenge: z.string().regex(/^[0-9a-f]{64}$/, 'challenge must be 64 hex chars (32 bytes)'),
+  signature: z.string().regex(/^[0-9a-f]{128}$/, 'signature must be 128 hex chars (64 bytes)'),
+  publicKey: z.string().regex(/^[0-9a-f]{64}$/, 'publicKey must be 64 hex chars (32 bytes)'),
 });
